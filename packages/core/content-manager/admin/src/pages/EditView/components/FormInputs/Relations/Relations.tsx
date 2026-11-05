@@ -761,7 +761,7 @@ const RelationModalWithContext = ({
   }, [fieldValue]);
 
   const handleSearch = async (search: string) => {
-    setSearchParams((s) => ({ ...s, _q: search, page: 1 }));
+    setSearchParams((s) => (s._q === search && s.page === 1 ? s : { ...s, _q: search, page: 1 }));
   };
   return (
     <RelationModalRenderer>
@@ -803,8 +803,14 @@ const RelationModalWithContext = ({
           }
           hasMoreItems={hasNextPage}
           loading={isLoadingSearchRelations || isLoadingPermissions}
-          onOpenChange={() => {
-            handleSearch(textValue ?? '');
+          onOpenChange={(isOpen) => {
+            /**
+             * Only refresh the search when opening. On close (e.g. right after a selection)
+             * `textValue` is stale and would re-apply the previous query.
+             */
+            if (isOpen) {
+              handleSearch(textValue ?? '');
+            }
           }}
           noOptionsMessage={() =>
             formatMessage({
